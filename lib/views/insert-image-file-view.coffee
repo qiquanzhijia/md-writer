@@ -211,14 +211,19 @@ class InsertImageFileView extends View
         detailedMessage: "Copying Image:\n#{error.message}"
         buttons: ['OK']
 
-  # get user's site local directory
+  # get user's site or hexo local directory
   siteLocalDir: -> utils.getSitePath(config.get("siteLocalDir"), @editor.getPath())
+  siteHexoSourceDir: -> utils.getSitePath(config.get("siteHexoSourceDir"), @editor.getPath())
   # get user's site images directory
   siteImagesDir: -> templateHelper.create("siteImagesDir", @frontMatter, @dateTime)
   # get current open file directory
   currentFileDir: -> path.dirname(@editor.getPath() || "")
   # check the file is in the site directory
   isInSiteDir: (file) -> file && file.startsWith(@siteLocalDir())
+
+  # check the file is in the hexo site directory && config.get("siteEngine", "hexo")
+  # TODO && @currentFileDir().startsWith(@siteLocalDir().join("source/",file))?
+  isInHexoSiteDir: (file) -> file && config.get("siteEngine", "hexo")
 
   # get copy image destination file path
   getCopiedImageDestPath: (file, title) ->
@@ -228,8 +233,10 @@ class InsertImageFileView extends View
       extension = path.extname(file)
       title = utils.slugize(title, config.get('slugSeparator'))
       filename = "#{title}#{extension}"
-
-    path.join(@siteLocalDir(), @siteImagesDir(), filename)
+    if config.get("siteEngine", "hexo") 
+      path.join(@currentFileDir(), @siteImagesDir(), filename)
+    else
+      path.join(@siteLocalDir(), @siteImagesDir(), filename)
 
   # try to resolve file to a valid src that could be displayed
   resolveImagePath: (file) ->
